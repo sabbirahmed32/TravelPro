@@ -68,18 +68,19 @@ Route::middleware(['auth'])->group(function () {
     // Main Dashboard Route
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     
-    // User Dashboard
+    // User Dashboard Routes
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
-        Route::get('/', [UserDashboardController::class, 'index'])->name('user');
+        // User Dashboard Home
+        Route::get('/user', [UserDashboardController::class, 'index'])->name('user');
         
         // Profile Management
-        Route::get('/profile', [UserDashboardController::class, 'profile'])->name('dashboard.profile');
-        Route::patch('/profile', [UserDashboardController::class, 'updateProfile'])->name('dashboard.profile.update');
-        Route::patch('/password', [UserDashboardController::class, 'updatePassword'])->name('dashboard.password.update');
-        Route::post('/avatar', [UserDashboardController::class, 'uploadAvatar'])->name('dashboard.avatar.upload');
+        Route::get('/profile', [UserDashboardController::class, 'profile'])->name('profile');
+        Route::patch('/profile', [UserDashboardController::class, 'updateProfile'])->name('profile.update');
+        Route::patch('/password', [UserDashboardController::class, 'updatePassword'])->name('password.update');
+        Route::post('/avatar', [UserDashboardController::class, 'uploadAvatar'])->name('avatar.upload');
         
         // User Routes
-        Route::prefix('user')->name('dashboard.user.')->group(function () {
+        Route::prefix('user')->name('user.')->group(function () {
             Route::get('/visa-applications', [UserDashboardController::class, 'visaApplications'])->name('visa-applications');
             Route::get('/student-applications', [UserDashboardController::class, 'studentApplications'])->name('student-applications');
             Route::get('/bookings', [UserDashboardController::class, 'bookings'])->name('bookings');
@@ -97,36 +98,38 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/analytics/data', [AdminDashboardController::class, 'getAnalytics'])->name('analytics.data');
         
         // User Management
-        Route::get('/users', [AdminDashboardController::class, 'manageUsers'])->name('admin.users');
-        Route::get('/users/{user}/edit', [AdminDashboardController::class, 'editUser'])->name('admin.users.edit');
-        Route::patch('/users/{user}', [AdminDashboardController::class, 'updateUser'])->name('admin.users.update');
-        Route::delete('/users/{user}', [AdminDashboardController::class, 'deleteUser'])->name('admin.users.delete');
+        Route::get('/users', [AdminDashboardController::class, 'manageUsers'])->name('users');
+        Route::get('/users/create', [AdminDashboardController::class, 'createUser'])->name('users.create');
+        Route::post('/users', [AdminDashboardController::class, 'storeUser'])->name('users.store');
+        Route::get('/users/{user}/edit', [AdminDashboardController::class, 'editUser'])->name('users.edit');
+        Route::patch('/users/{user}', [AdminDashboardController::class, 'updateUser'])->name('users.update');
+        Route::delete('/users/{user}', [AdminDashboardController::class, 'deleteUser'])->name('users.delete');
         
         // Visa Applications
-        Route::get('/visa-applications', [AdminDashboardController::class, 'manageVisaApplications'])->name('admin.visa-applications');
-        Route::get('/visa-applications/{visaApplication}', [AdminDashboardController::class, 'showVisaApplication'])->name('admin.visa-applications.show');
-        Route::post('/visa-applications/{visaApplication}/status', [VisaApplicationController::class, 'updateStatus'])->name('admin.visa-applications.status');
+        Route::get('/visa-applications', [AdminDashboardController::class, 'manageVisaApplications'])->name('visa-applications');
+        Route::get('/visa-applications/{visaApplication}', [AdminDashboardController::class, 'showVisaApplication'])->name('visa-applications.show');
+        Route::post('/visa-applications/{visaApplication}/status', [VisaApplicationController::class, 'updateStatus'])->name('visa-applications.status');
         
         // Student Applications
-        Route::get('/student-applications', [AdminDashboardController::class, 'manageStudentApplications'])->name('admin.student-applications');
-        Route::get('/student-applications/{studentApplication}', [AdminDashboardController::class, 'showStudentApplication'])->name('admin.student-applications.show');
-        Route::post('/student-applications/{studentApplication}/status', [StudentApplicationController::class, 'updateStatus'])->name('admin.student-applications.status');
+        Route::get('/student-applications', [AdminDashboardController::class, 'manageStudentApplications'])->name('student-applications');
+        Route::get('/student-applications/{studentApplication}', [AdminDashboardController::class, 'showStudentApplication'])->name('student-applications.show');
+        Route::post('/student-applications/{studentApplication}/status', [StudentApplicationController::class, 'updateStatus'])->name('student-applications.status');
         
         // Bookings
-        Route::get('/bookings', [AdminDashboardController::class, 'manageBookings'])->name('admin.bookings');
-        Route::get('/bookings/{booking}', [AdminDashboardController::class, 'showBooking'])->name('admin.bookings.show');
-        Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirm'])->name('admin.bookings.confirm');
+        Route::get('/bookings', [AdminDashboardController::class, 'manageBookings'])->name('bookings');
+        Route::get('/bookings/{booking}', [AdminDashboardController::class, 'showBooking'])->name('bookings.show');
+        Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirm'])->name('bookings.confirm');
         
         // Consultations
-        Route::get('/consultations', [AdminDashboardController::class, 'manageConsultations'])->name('admin.consultations');
-        Route::get('/consultations/{consultation}', [AdminDashboardController::class, 'showConsultation'])->name('admin.consultations.show');
-        Route::post('/consultations/{consultation}/schedule', [ConsultationController::class, 'schedule'])->name('admin.consultations.schedule');
-        Route::post('/consultations/{consultation}/complete', [ConsultationController::class, 'complete'])->name('admin.consultations.complete');
+        Route::get('/consultations', [AdminDashboardController::class, 'manageConsultations'])->name('consultations');
+        Route::get('/consultations/{consultation}', [AdminDashboardController::class, 'showConsultation'])->name('consultations.show');
+        Route::post('/consultations/{consultation}/schedule', [ConsultationController::class, 'schedule'])->name('consultations.schedule');
+        Route::post('/consultations/{consultation}/complete', [ConsultationController::class, 'complete'])->name('consultations.complete');
         
         // Content Management
-        Route::get('/blogs', [AdminDashboardController::class, 'manageBlogs'])->name('admin.blogs');
-        Route::get('/faqs', [AdminDashboardController::class, 'manageFAQs'])->name('admin.faqs');
-        Route::get('/travel-packages', [AdminDashboardController::class, 'manageTravelPackages'])->name('admin.travel-packages');
+        Route::get('/blogs', [AdminDashboardController::class, 'manageBlogs'])->name('blogs');
+        Route::get('/faqs', [AdminDashboardController::class, 'manageFAQs'])->name('faqs');
+        Route::get('/travel-packages', [AdminDashboardController::class, 'manageTravelPackages'])->name('travel-packages');
     });
     
     // API Routes for AJAX

@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 class AdminDashboardController extends Controller
@@ -93,7 +94,7 @@ class AdminDashboardController extends Controller
         return view('dashboard.admin.users.edit', compact('user'));
     }
 
-    public function updateUser(Request $request, User $user): JsonResponse
+    public function updateUser(Request $request, User $user)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -105,27 +106,85 @@ class AdminDashboardController extends Controller
 
         $user->update($request->all());
 
-        return response()->json([
-            'success' => true,
-            'message' => 'User updated successfully!'
-        ]);
+        // Handle AJAX requests
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User updated successfully!'
+            ]);
+        }
+
+        // Handle regular form submissions
+return redirect()
+            ->route('admin.users')
+            ->with('success', 'User updated successfully!');
     }
 
-    public function deleteUser(User $user): JsonResponse
+public function deleteUser(Request $request, User $user)
     {
-        if ($user->id === request()->user()->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot delete your own account!'
-            ], 422);
+        if ($user->id === $request->user()->id) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete your own account!'
+                ], 422);
+            }
+            
+            return redirect()
+                ->route('admin.users')
+                ->with('error', 'Cannot delete your own account!');
         }
 
         $user->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'User deleted successfully!'
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User deleted successfully!'
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.users')
+            ->with('success', 'User deleted successfully!');
+    }
+
+    public function createUser(): View
+    {
+        return view('dashboard.admin.users.create');
+    }
+
+    public function storeUser(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|in:admin,user',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
         ]);
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+            'phone' => $request->phone,
+            'address' => $request->address,
+        ]);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User created successfully!',
+                'user' => $user
+            ]);
+        }
+
+return redirect()
+            ->route('admin.users')
+            ->with('success', 'User created successfully!');
     }
 
     public function manageVisaApplications(): View

@@ -164,7 +164,7 @@ document.getElementById('profileForm').addEventListener('submit', function(e) {
     
     const formData = new FormData(this);
     
-    fetch('{{ route("user.profile.update") }}', {
+    fetch('{{ route("dashboard.profile.update") }}', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -192,7 +192,7 @@ document.getElementById('passwordForm').addEventListener('submit', function(e) {
     
     const formData = new FormData(this);
     
-    fetch('{{ route("user.password.update") }}', {
+    fetch('{{ route("dashboard.password.update") }}', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -221,7 +221,7 @@ document.getElementById('avatarForm').addEventListener('submit', function(e) {
     
     const formData = new FormData(this);
     
-    fetch('{{ route("user.avatar.upload") }}', {
+    fetch('{{ route("dashboard.avatar.upload") }}', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
