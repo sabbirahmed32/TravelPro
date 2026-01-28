@@ -128,8 +128,27 @@ Route::middleware(['auth'])->group(function () {
         
         // Content Management
         Route::get('/blogs', [AdminDashboardController::class, 'manageBlogs'])->name('blogs');
+        Route::get('/blogs/create', [AdminDashboardController::class, 'createBlog'])->name('blogs.create');
+        Route::post('/blogs', [AdminDashboardController::class, 'storeBlog'])->name('blogs.store');
+        Route::get('/blogs/{blog}', [AdminDashboardController::class, 'showBlog'])->name('blogs.show');
+        Route::get('/blogs/{blog}/edit', [AdminDashboardController::class, 'editBlog'])->name('blogs.edit');
+        Route::put('/blogs/{blog}', [AdminDashboardController::class, 'updateBlog'])->name('blogs.update');
+        Route::patch('/blogs/{blog}/publish', [AdminDashboardController::class, 'publishBlog'])->name('blogs.publish');
+        Route::patch('/blogs/{blog}/archive', [AdminDashboardController::class, 'archiveBlog'])->name('blogs.archive');
+        Route::delete('/blogs/{blog}', [AdminDashboardController::class, 'destroyBlog'])->name('blogs.destroy');
+        
         Route::get('/faqs', [AdminDashboardController::class, 'manageFAQs'])->name('faqs');
+        
+        // Travel Packages
         Route::get('/travel-packages', [AdminDashboardController::class, 'manageTravelPackages'])->name('travel-packages');
+        Route::get('/travel-packages/create', [AdminDashboardController::class, 'createTravelPackage'])->name('travel-packages.create');
+        Route::post('/travel-packages', [AdminDashboardController::class, 'storeTravelPackage'])->name('travel-packages.store');
+        Route::get('/travel-packages/{travelPackage}', [AdminDashboardController::class, 'showTravelPackage'])->name('travel-packages.show');
+        Route::get('/travel-packages/{travelPackage}/edit', [AdminDashboardController::class, 'editTravelPackage'])->name('travel-packages.edit');
+        Route::put('/travel-packages/{travelPackage}', [AdminDashboardController::class, 'updateTravelPackage'])->name('travel-packages.update');
+        Route::patch('/travel-packages/{travelPackage}/activate', [AdminDashboardController::class, 'activateTravelPackage'])->name('travel-packages.activate');
+        Route::patch('/travel-packages/{travelPackage}/deactivate', [AdminDashboardController::class, 'deactivateTravelPackage'])->name('travel-packages.deactivate');
+        Route::delete('/travel-packages/{travelPackage}', [AdminDashboardController::class, 'destroyTravelPackage'])->name('travel-packages.destroy');
     });
     
     // API Routes for AJAX

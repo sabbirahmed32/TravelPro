@@ -13,9 +13,13 @@ use App\Models\FAQ;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class AdminDashboardController extends Controller
@@ -271,6 +275,147 @@ return redirect()
         return view('dashboard.admin.blogs.index', compact('blogs'));
     }
 
+    public function createBlog(): View
+    {
+        return view('dashboard.admin.blogs.create');
+    }
+
+    public function storeBlog(Request $request): RedirectResponse
+    {
+        // Debug: Log the request data
+        Log::info('Blog creation attempt', [
+            'request_data' => $request->all(),
+            'user_authenticated' => Auth::check(),
+            'user_id' => Auth::id(),
+            'auth_user' => Auth::user()
+        ]);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:blogs,slug',
+            'excerpt' => 'required|string|max:500',
+            'content' => 'required|string',
+            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'status' => 'required|in:draft,published,archived',
+            'is_featured' => 'sometimes|boolean',
+            'tags' => 'nullable|string',
+            'published_at' => 'nullable|date',
+        ]);
+
+        // Debug: Log validation result
+        Log::info('Validation passed', ['validated_data' => $validated]);
+
+        // Debug: Check if user is authenticated
+        if (!Auth::check()) {
+            Log::error('User not authenticated when creating blog');
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['auth' => 'You must be logged in to create a blog post.']);
+        }
+
+        // Handle checkbox - if not checked, it won't be in request
+        $validated['is_featured'] = $request->has('is_featured') ? true : false;
+        
+        // Handle tags - convert comma-separated string to array if needed
+        if (!empty($validated['tags'])) {
+            if (is_string($validated['tags'])) {
+                $validated['tags'] = array_map('trim', explode(',', $validated['tags']));
+            }
+        } else {
+            $validated['tags'] = null;
+        }
+
+        $validated['author_id'] = Auth::id();
+
+        if ($request->hasFile('featured_image')) {
+            $validated['featured_image'] = $request->file('featured_image')->store('blogs', 'public');
+        }
+
+        if ($validated['status'] === 'published' && !$validated['published_at']) {
+            $validated['published_at'] = now();
+        }
+
+        Log::info('Final blog data before creation', ['blog_data' => $validated]);
+
+        Blog::create($validated);
+
+        return redirect()->route('admin.blogs')
+            ->with('success', 'Blog post created successfully.');
+    }
+
+    public function showBlog(Blog $blog): View
+    {
+        return view('dashboard.admin.blogs.show', compact('blog'));
+    }
+
+    public function editBlog(Blog $blog): View
+    {
+        return view('dashboard.admin.blogs.edit', compact('blog'));
+    }
+
+    public function updateBlog(Request $request, Blog $blog): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:blogs,slug,' . $blog->id,
+            'excerpt' => 'required|string|max:500',
+            'content' => 'required|string',
+            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'status' => 'required|in:draft,published,archived',
+            'is_featured' => 'boolean',
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:50',
+            'published_at' => 'nullable|date',
+        ]);
+
+        if ($request->hasFile('featured_image')) {
+            if ($blog->featured_image) {
+                Storage::disk('public')->delete($blog->featured_image);
+            }
+            $validated['featured_image'] = $request->file('featured_image')->store('blogs', 'public');
+        }
+
+        if ($validated['status'] === 'published' && !$validated['published_at'] && !$blog->published_at) {
+            $validated['published_at'] = now();
+        }
+
+        $blog->update($validated);
+
+        return redirect()->route('admin.blogs')
+            ->with('success', 'Blog post updated successfully.');
+    }
+
+    public function publishBlog(Blog $blog): RedirectResponse
+    {
+        $blog->update([
+            'status' => 'published',
+            'published_at' => $blog->published_at ?: now()
+        ]);
+
+        return redirect()->route('admin.blogs')
+            ->with('success', 'Blog post published successfully.');
+    }
+
+    public function archiveBlog(Blog $blog): RedirectResponse
+    {
+        $blog->update(['status' => 'archived']);
+
+        return redirect()->route('admin.blogs')
+            ->with('success', 'Blog post archived successfully.');
+    }
+
+    public function destroyBlog(Blog $blog): RedirectResponse
+    {
+        if ($blog->featured_image) {
+            Storage::disk('public')->delete($blog->featured_image);
+        }
+
+        $blog->delete();
+
+        return redirect()->route('admin.blogs')
+            ->with('success', 'Blog post deleted successfully.');
+    }
+
     public function manageFAQs(): View
     {
         $faqs = FAQ::latest()->paginate(10);
@@ -281,6 +426,102 @@ return redirect()
     {
         $packages = TravelPackage::latest()->paginate(10);
         return view('dashboard.admin.travel-packages.index', compact('packages'));
+    }
+
+    public function createTravelPackage(): View
+    {
+        return view('dashboard.admin.travel-packages.create');
+    }
+
+    public function storeTravelPackage(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'destination' => 'required|string|max:255',
+            'description' => 'required|string',
+            'price' => 'required|numeric|min:0',
+            'currency' => 'required|string|max:3',
+            'duration' => 'required|integer|min:1',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after:start_date',
+            'status' => 'required|in:active,inactive',
+            'featured' => 'boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('travel-packages', 'public');
+        }
+
+        TravelPackage::create($validated);
+
+        return redirect()->route('admin.travel-packages')
+            ->with('success', 'Travel package created successfully.');
+    }
+
+    public function showTravelPackage(TravelPackage $travelPackage): View
+    {
+        return view('dashboard.admin.travel-packages.show', compact('travelPackage'));
+    }
+
+    public function editTravelPackage(TravelPackage $travelPackage): View
+    {
+        return view('dashboard.admin.travel-packages.edit', compact('travelPackage'));
+    }
+
+    public function updateTravelPackage(Request $request, TravelPackage $travelPackage): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'destination' => 'required|string|max:255',
+            'description' => 'required|string',
+            'price' => 'required|numeric|min:0',
+            'currency' => 'required|string|max:3',
+            'duration' => 'required|integer|min:1',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after:start_date',
+            'status' => 'required|in:active,inactive',
+            'featured' => 'boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        if ($request->hasFile('image')) {
+            if ($travelPackage->image) {
+                Storage::disk('public')->delete($travelPackage->image);
+            }
+            $validated['image'] = $request->file('image')->store('travel-packages', 'public');
+        }
+
+        $travelPackage->update($validated);
+
+        return redirect()->route('admin.travel-packages')
+            ->with('success', 'Travel package updated successfully.');
+    }
+
+    public function activateTravelPackage(TravelPackage $travelPackage): RedirectResponse
+    {
+        $travelPackage->update(['status' => 'active']);
+        return redirect()->route('admin.travel-packages')
+            ->with('success', 'Travel package activated successfully.');
+    }
+
+    public function deactivateTravelPackage(TravelPackage $travelPackage): RedirectResponse
+    {
+        $travelPackage->update(['status' => 'inactive']);
+        return redirect()->route('admin.travel-packages')
+            ->with('success', 'Travel package deactivated successfully.');
+    }
+
+    public function destroyTravelPackage(TravelPackage $travelPackage): RedirectResponse
+    {
+        if ($travelPackage->image) {
+            Storage::disk('public')->delete($travelPackage->image);
+        }
+
+        $travelPackage->delete();
+
+        return redirect()->route('admin.travel-packages')
+            ->with('success', 'Travel package deleted successfully.');
     }
 
     public function analytics(): View
