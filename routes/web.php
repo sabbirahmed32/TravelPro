@@ -10,6 +10,7 @@ use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\ContentController;
 
 // Static Pages
 Route::get('/', function () {
@@ -138,6 +139,10 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/blogs/{blog}', [AdminDashboardController::class, 'destroyBlog'])->name('blogs.destroy');
         
         Route::get('/faqs', [AdminDashboardController::class, 'manageFAQs'])->name('faqs');
+        Route::post('/faqs', [ContentController::class, 'storeFaq'])->name('faqs.store');
+        Route::put('/faqs/{faq}', [ContentController::class, 'updateFaq'])->name('faqs.update');
+        Route::delete('/faqs/{faq}', [ContentController::class, 'destroyFaq'])->name('faqs.destroy');
+        Route::patch('/faqs/{faq}/toggle', [ContentController::class, 'toggleFaqStatus'])->name('faqs.toggle');
         
         // Travel Packages
         Route::get('/travel-packages', [AdminDashboardController::class, 'manageTravelPackages'])->name('travel-packages');
