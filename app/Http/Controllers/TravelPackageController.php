@@ -136,4 +136,25 @@ class TravelPackageController extends Controller
             'package' => $travelPackage
         ]);
     }
+
+    public function frontendIndex()
+    {
+        // Fetch all active travel packages from database
+        $packages = TravelPackage::where('is_active', true)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('pages.tours.index', compact('packages'));
+    }
+
+    public function home()
+    {
+        // Fetch featured travel packages for homepage (limit to 6)
+        $packages = TravelPackage::where('is_active', true)
+            ->orderBy('created_at', 'desc')
+            ->take(6)
+            ->get();
+
+        return view('pages.home.index', compact('packages'));
+    }
 }

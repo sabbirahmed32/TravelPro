@@ -113,62 +113,95 @@
     </div>
 </section>
 
-<!-- Popular Destinations -->
+<!-- Featured Travel Packages -->
 <section class="section-padding">
     <div class="container">
         <div class="row">
             <div class="col-lg-12">
-                <h2 class="section-title">Popular Destinations</h2>
-                <p class="section-subtitle">Explore our most sought-after travel destinations</p>
+                <h2 class="section-title">Featured Travel Packages</h2>
+                <p class="section-subtitle">Handpicked packages for unforgettable experiences</p>
             </div>
         </div>
         
+        @if($packages->count() > 0)
         <div class="row g-4">
+            @foreach($packages as $package)
             <div class="col-lg-4 col-md-6">
-                <div class="card destination-card">
-                    <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80" 
-                         class="card-img-top" alt="Dubai">
-                    <div class="card-body">
-                        <h5 class="card-title">Dubai, UAE</h5>
-                        <p class="card-text">Experience luxury and innovation in the city of superlatives.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-primary fw-bold">From $1,299</span>
-                            <a href="#" class="btn btn-primary btn-sm">Explore</a>
+                <div class="card destination-card h-100">
+                    @if($package->image)
+                    <img src="{{ asset('storage/' . $package->image) }}" 
+                         class="card-img-top" alt="{{ $package->title }}"
+                         style="height: 200px; object-fit: cover;">
+                    @else
+                    <img src="https://via.placeholder.com/400x200?text=No+Image" 
+                         class="card-img-top" alt="{{ $package->title }}"
+                         style="height: 200px; object-fit: cover;">
+                    @endif
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ $package->title }}</h5>
+                        
+                        <p class="text-muted small mb-2">
+                            <i class="bi bi-geo-alt me-1"></i>{{ ucfirst($package->destination) }}
+                        </p>
+                        
+                        <p class="card-text">{{ Str::limit($package->description, 80) }}</p>
+                        
+                        <div class="mb-3">
+                            @if($package->start_date && $package->end_date)
+                            <small class="text-muted d-block">
+                                <i class="bi bi-calendar me-1"></i>
+                                {{ \Carbon\Carbon::parse($package->start_date)->format('M d, Y') }} - 
+                                {{ \Carbon\Carbon::parse($package->end_date)->format('M d, Y') }}
+                            </small>
+                            @endif
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>{{ $package->duration_days }} days
+                            </small>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="package-price">
+                                    <span class="h5 text-primary mb-0 d-block">${{ number_format($package->price, 2) }}</span>
+                                    <small class="text-muted">/person</small>
+                                </div>
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>Available
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <a href="{{ url('/tours-holidays') }}" class="btn btn-outline-primary btn-sm flex-fill">
+                                    <i class="bi bi-eye me-1"></i>View Details
+                                </a>
+                                <a href="{{ url('/consultation') }}" class="btn btn-primary btn-sm flex-fill">
+                                    <i class="bi bi-calendar-check me-1"></i>Book Now
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="col-lg-4 col-md-6">
-                <div class="card destination-card">
-                    <img src="https://images.unsplash.com/photo-1512455039149-3cbb91b0b6f9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80" 
-                         class="card-img-top" alt="Singapore">
-                    <div class="card-body">
-                        <h5 class="card-title">Singapore</h5>
-                        <p class="card-text">Discover the perfect blend of culture, cuisine, and modernity.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-primary fw-bold">From $999</span>
-                            <a href="#" class="btn btn-primary btn-sm">Explore</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-4 col-md-6">
-                <div class="card destination-card">
-                    <img src="https://images.unsplash.com/photo-1519904981063-b0cf448d479e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80" 
-                         class="card-img-top" alt="Malaysia">
-                    <div class="card-body">
-                        <h5 class="card-title">Malaysia</h5>
-                        <p class="card-text">Explore diverse landscapes and vibrant multicultural cities.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-primary fw-bold">From $799</span>
-                            <a href="#" class="btn btn-primary btn-sm">Explore</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @endforeach
         </div>
+        @else
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+            </div>
+            <h4 class="text-muted">No Travel Packages Available</h4>
+            <p class="text-muted">We're currently updating our tour packages. Please check back soon!</p>
+        </div>
+        @endif
+        
+        @if($packages->count() > 0)
+        <div class="text-center mt-4">
+            <a href="{{ url('/tours-holidays') }}" class="btn btn-primary btn-lg">
+                <i class="bi bi-grid-3x3-gap me-2"></i>View All Packages
+            </a>
+        </div>
+        @endif
     </div>
 </section>
 

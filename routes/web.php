@@ -11,11 +11,10 @@ use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\ContentController;
+use App\Http\Controllers\TravelPackageController;
 
 // Static Pages
-Route::get('/', function () {
-    return view('pages.home.index');
-})->name('home');
+Route::get('/', [TravelPackageController::class, 'home'])->name('home');
 
 Route::get('/about', function () {
     return view('pages.about.index');
@@ -29,9 +28,7 @@ Route::get('/student-admission', function () {
     return view('pages.student.index');
 })->name('student-admission');
 
-Route::get('/tours-holidays', function () {
-    return view('pages.tours.index');
-})->name('tours-holidays');
+Route::get('/tours-holidays', [TravelPackageController::class, 'frontendIndex'])->name('tours-holidays');
 
 Route::get('/consultation', function () {
     return view('pages.consultation.index');

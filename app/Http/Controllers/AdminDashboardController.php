@@ -435,28 +435,31 @@ return redirect()
 
     public function storeTravelPackage(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'destination' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
-            'currency' => 'required|string|max:3',
-            'duration' => 'required|integer|min:1',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'status' => 'required|in:active,inactive',
-            'featured' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        // Get form data - use 'name' field for title
+        $data = [
+            'title' => $request->name,  // Form uses 'name' field
+            'destination' => $request->destination,
+            'description' => $request->description,
+            'price' => $request->price,
+            'duration_days' => $request->duration ?? 7,  // Form uses 'duration'
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'max_travelers' => $request->max_travelers ?? 20,
+            'inclusions' => '[]',  // Required field
+            'exclusions' => '[]',  // Required field
+            'is_active' => ($request->status == 'active') ? 1 : 0,  // Form uses 'status'
+        ];
 
+        // Handle image upload
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('travel-packages', 'public');
+            $data['image'] = $request->file('image')->store('travel-packages', 'public');
         }
 
-        TravelPackage::create($validated);
+        // Create the record
+        $travelPackage = TravelPackage::create($data);
 
         return redirect()->route('admin.travel-packages')
-            ->with('success', 'Travel package created successfully.');
+            ->with('success', 'Travel package created successfully with ID: ' . $travelPackage->id);
     }
 
     public function showTravelPackage(TravelPackage $travelPackage): View
@@ -500,14 +503,14 @@ return redirect()
 
     public function activateTravelPackage(TravelPackage $travelPackage): RedirectResponse
     {
-        $travelPackage->update(['status' => 'active']);
+        $travelPackage->update(['is_active' => 1]);
         return redirect()->route('admin.travel-packages')
             ->with('success', 'Travel package activated successfully.');
     }
 
     public function deactivateTravelPackage(TravelPackage $travelPackage): RedirectResponse
     {
-        $travelPackage->update(['status' => 'inactive']);
+        $travelPackage->update(['is_active' => 0]);
         return redirect()->route('admin.travel-packages')
             ->with('success', 'Travel package deactivated successfully.');
     }
