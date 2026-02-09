@@ -30,6 +30,10 @@ Route::get('/student-admission', function () {
 
 Route::get('/tours-holidays', [TravelPackageController::class, 'frontendIndex'])->name('tours-holidays');
 
+// Booking Routes
+Route::get('/book-package/{package}', [BookingController::class, 'create'])->name('booking.create');
+Route::post('/book-package/{package}', [BookingController::class, 'storeFromFrontend'])->name('booking.store.frontend');
+
 Route::get('/consultation', function () {
     return view('pages.consultation.index');
 })->name('consultation');

@@ -6,6 +6,8 @@ use App\Models\TravelPackage;
 use App\Models\Booking;
 use App\Http\Requests\StoreBookingRequest;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
 {
@@ -32,6 +34,50 @@ class BookingController extends Controller
         $this->authorizeView($request->user(), $booking);
         
         return response()->json($booking->load(['user', 'travelPackage', 'payments']));
+    }
+
+    public function create(Request $request, TravelPackage $package): View
+    {
+        return view('pages.booking.create', compact('package'));
+    }
+
+    public function storeFromFrontend(Request $request, TravelPackage $package)
+    {
+        $request->validate([
+            'number_of_travelers' => 'required|integer|min:1|max:10',
+            'special_requests' => 'nullable|string|max:1000',
+            'contact_phone' => 'required|string|max:20',
+            'contact_email' => 'required|email|max:255',
+        ]);
+
+        if ($package->is_sold_out) {
+            return redirect()->back()->with('error', 'This package is sold out');
+        }
+
+        if ($package->available_slots < $request->number_of_travelers) {
+            return redirect()->back()->with('error', 'Not enough available slots for this package');
+        }
+
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login')->with('message', 'Please login to book this package');
+        }
+
+        $booking = Booking::create([
+            'user_id' => $user->id,
+            'travel_package_id' => $package->id,
+            'booking_reference' => 'BK' . strtoupper(uniqid()),
+            'number_of_travelers' => $request->number_of_travelers,
+            'total_price' => $package->current_price * $request->number_of_travelers,
+            'booking_date' => now(),
+            'payment_due_date' => now()->addDays(3),
+            'status' => 'pending',
+            'special_requests' => $request->special_requests,
+            'contact_phone' => $request->contact_phone,
+            'contact_email' => $request->contact_email,
+        ]);
+
+        return redirect()->route('dashboard.user.bookings')->with('success', 'Booking created successfully! Your booking reference is ' . $booking->booking_reference);
     }
 
     public function store(StoreBookingRequest $request)

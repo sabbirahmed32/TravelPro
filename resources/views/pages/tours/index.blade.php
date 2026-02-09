@@ -75,7 +75,7 @@
                                 <a href="#" class="btn btn-primary">
                                     <i class="bi bi-eye me-2"></i>View Details
                                 </a>
-                                <a href="#" class="btn btn-outline-primary">
+                                <a href="{{ route('booking.create', $package) }}" class="btn btn-outline-primary">
                                     <i class="bi bi-calendar-check me-2"></i>Book Now
                                 </a>
                             </div>
